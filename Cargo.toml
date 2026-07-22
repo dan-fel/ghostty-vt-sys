@@ -1,0 +1,11 @@
+[package]
+name = "ghostty-vt-sys"
+version = "0.1.0"
+edition = "2024"
+description = "Raw Rust bindings and native build integration for libghostty-vt"
+repository = "https://github.com/dan-fel/ghostty-vt-sys"
+publish = false
+links = "ghostty-vt"
+
+[dependencies]
+
