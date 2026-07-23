@@ -15,6 +15,12 @@ pub const GHOSTTY_SUCCESS: GhosttyResult = 0;
 pub const GHOSTTY_OUT_OF_MEMORY: GhosttyResult = -1;
 pub const GHOSTTY_INVALID_VALUE: GhosttyResult = -2;
 
+pub type GhosttyTerminalScrollViewportTag = c_int;
+
+pub const GHOSTTY_SCROLL_VIEWPORT_TOP: GhosttyTerminalScrollViewportTag = 0;
+pub const GHOSTTY_SCROLL_VIEWPORT_BOTTOM: GhosttyTerminalScrollViewportTag = 1;
+pub const GHOSTTY_SCROLL_VIEWPORT_DELTA: GhosttyTerminalScrollViewportTag = 2;
+
 pub type GhosttyRenderStateData = c_int;
 
 pub const GHOSTTY_RENDER_STATE_DATA_COLS: GhosttyRenderStateData = 1;
@@ -88,6 +94,20 @@ pub struct GhosttyTerminalOptions {
     pub cols: u16,
     pub rows: u16,
     pub max_scrollback: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union GhosttyTerminalScrollViewportValue {
+    pub delta: isize,
+    pub _padding: [u64; 2],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct GhosttyTerminalScrollViewport {
+    pub tag: GhosttyTerminalScrollViewportTag,
+    pub value: GhosttyTerminalScrollViewportValue,
 }
 
 #[repr(C)]
@@ -186,6 +206,11 @@ unsafe extern "C" {
     ) -> GhosttyResult;
 
     pub fn ghostty_terminal_vt_write(terminal: GhosttyTerminal, data: *const u8, length: usize);
+
+    pub fn ghostty_terminal_scroll_viewport(
+        terminal: GhosttyTerminal,
+        behavior: GhosttyTerminalScrollViewport,
+    );
 
     pub fn ghostty_render_state_new(
         allocator: *const GhosttyAllocator,
