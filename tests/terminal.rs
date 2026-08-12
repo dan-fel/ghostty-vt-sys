@@ -57,6 +57,146 @@ fn terminal_lifecycle_and_viewport_scroll_bindings_are_callable() {
 }
 
 #[test]
+fn terminal_state_and_mouse_encoder_bindings_are_callable() {
+    let terminal = create_terminal(ghostty_vt_sys::GhosttyTerminalOptions {
+        cols: 5,
+        rows: 2,
+        max_scrollback: 10,
+    });
+    let output = b"one\r\ntwo\r\nthree\x1b[?1000h\x1b[?1006h";
+
+    // SAFETY: `terminal` is live, and `output` remains valid for the call.
+    unsafe {
+        ghostty_vt_sys::ghostty_terminal_vt_write(terminal, output.as_ptr(), output.len());
+    }
+
+    let mut screen = ghostty_vt_sys::GHOSTTY_TERMINAL_SCREEN_PRIMARY;
+    let mut scrollbar = ghostty_vt_sys::GhosttyTerminalScrollbar {
+        total: 0,
+        offset: 0,
+        len: 0,
+    };
+    let mut mouse_tracking = false;
+    let mut alternate_scroll = false;
+
+    // SAFETY: Every output pointer matches the type documented for its queried data or mode.
+    unsafe {
+        assert_eq!(
+            ghostty_vt_sys::ghostty_terminal_get(
+                terminal,
+                ghostty_vt_sys::GHOSTTY_TERMINAL_DATA_ACTIVE_SCREEN,
+                ptr::from_mut(&mut screen).cast(),
+            ),
+            ghostty_vt_sys::GHOSTTY_SUCCESS
+        );
+        assert_eq!(
+            ghostty_vt_sys::ghostty_terminal_get(
+                terminal,
+                ghostty_vt_sys::GHOSTTY_TERMINAL_DATA_SCROLLBAR,
+                ptr::from_mut(&mut scrollbar).cast(),
+            ),
+            ghostty_vt_sys::GHOSTTY_SUCCESS
+        );
+        assert_eq!(
+            ghostty_vt_sys::ghostty_terminal_get(
+                terminal,
+                ghostty_vt_sys::GHOSTTY_TERMINAL_DATA_MOUSE_TRACKING,
+                ptr::from_mut(&mut mouse_tracking).cast(),
+            ),
+            ghostty_vt_sys::GHOSTTY_SUCCESS
+        );
+        assert_eq!(
+            ghostty_vt_sys::ghostty_terminal_mode_get(
+                terminal,
+                ghostty_vt_sys::GHOSTTY_MODE_ALT_SCROLL,
+                &mut alternate_scroll,
+            ),
+            ghostty_vt_sys::GHOSTTY_SUCCESS
+        );
+    }
+
+    assert_eq!(screen, ghostty_vt_sys::GHOSTTY_TERMINAL_SCREEN_PRIMARY);
+    assert_eq!(scrollbar.len, 2);
+    assert!(scrollbar.total >= scrollbar.offset + scrollbar.len);
+    assert!(mouse_tracking);
+    assert!(alternate_scroll);
+
+    let mut event = ptr::null_mut();
+    let mut encoder = ptr::null_mut();
+    // SAFETY: Both values are valid out-pointers and null selects Ghostty's default allocator.
+    unsafe {
+        assert_eq!(
+            ghostty_vt_sys::ghostty_mouse_event_new(ptr::null(), &mut event),
+            ghostty_vt_sys::GHOSTTY_SUCCESS
+        );
+        assert_eq!(
+            ghostty_vt_sys::ghostty_mouse_encoder_new(ptr::null(), &mut encoder),
+            ghostty_vt_sys::GHOSTTY_SUCCESS
+        );
+    }
+    assert!(!event.is_null());
+    assert!(!encoder.is_null());
+
+    let encoder_size = ghostty_vt_sys::GhosttyMouseEncoderSize {
+        size: std::mem::size_of::<ghostty_vt_sys::GhosttyMouseEncoderSize>(),
+        screen_width: 50,
+        screen_height: 40,
+        cell_width: 10,
+        cell_height: 20,
+        padding_top: 0,
+        padding_bottom: 0,
+        padding_right: 0,
+        padding_left: 0,
+    };
+    let mut encoded = [0_i8; 32];
+    let mut encoded_len = 0;
+
+    // SAFETY: The event and encoder are live, the option pointer has the documented size type,
+    // and the output buffer remains writable for its declared length.
+    let result = unsafe {
+        ghostty_vt_sys::ghostty_mouse_event_set_action(
+            event,
+            ghostty_vt_sys::GHOSTTY_MOUSE_ACTION_PRESS,
+        );
+        ghostty_vt_sys::ghostty_mouse_event_set_button(
+            event,
+            ghostty_vt_sys::GHOSTTY_MOUSE_BUTTON_FOUR,
+        );
+        ghostty_vt_sys::ghostty_mouse_event_set_position(
+            event,
+            ghostty_vt_sys::GhosttyMousePosition { x: 0.0, y: 0.0 },
+        );
+        ghostty_vt_sys::ghostty_mouse_encoder_setopt(
+            encoder,
+            ghostty_vt_sys::GHOSTTY_MOUSE_ENCODER_OPT_SIZE,
+            ptr::from_ref(&encoder_size).cast(),
+        );
+        ghostty_vt_sys::ghostty_mouse_encoder_setopt_from_terminal(encoder, terminal);
+        ghostty_vt_sys::ghostty_mouse_encoder_encode(
+            encoder,
+            event,
+            encoded.as_mut_ptr(),
+            encoded.len(),
+            &mut encoded_len,
+        )
+    };
+
+    assert_eq!(result, ghostty_vt_sys::GHOSTTY_SUCCESS);
+    let encoded = encoded[..encoded_len]
+        .iter()
+        .map(|byte| *byte as u8)
+        .collect::<Vec<_>>();
+    assert_eq!(encoded, b"\x1b[<64;1;1M");
+
+    // SAFETY: Each handle is still live and freed exactly once.
+    unsafe {
+        ghostty_vt_sys::ghostty_mouse_encoder_free(encoder);
+        ghostty_vt_sys::ghostty_mouse_event_free(event);
+        ghostty_vt_sys::ghostty_terminal_free(terminal);
+    }
+}
+
+#[test]
 fn write_pty_callback_receives_terminal_query_response() {
     let terminal = create_terminal(ghostty_vt_sys::GhosttyTerminalOptions {
         cols: 1,

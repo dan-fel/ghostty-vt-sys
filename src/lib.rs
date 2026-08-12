@@ -14,6 +14,43 @@ pub type GhosttyResult = c_int;
 pub const GHOSTTY_SUCCESS: GhosttyResult = 0;
 pub const GHOSTTY_OUT_OF_MEMORY: GhosttyResult = -1;
 pub const GHOSTTY_INVALID_VALUE: GhosttyResult = -2;
+pub const GHOSTTY_OUT_OF_SPACE: GhosttyResult = -3;
+
+pub type GhosttyMode = u16;
+
+pub const GHOSTTY_MODE_DECCKM: GhosttyMode = 1;
+pub const GHOSTTY_MODE_ALT_SCROLL: GhosttyMode = 1007;
+
+pub type GhosttyTerminalData = c_int;
+
+pub const GHOSTTY_TERMINAL_DATA_ACTIVE_SCREEN: GhosttyTerminalData = 6;
+pub const GHOSTTY_TERMINAL_DATA_SCROLLBAR: GhosttyTerminalData = 9;
+pub const GHOSTTY_TERMINAL_DATA_MOUSE_TRACKING: GhosttyTerminalData = 11;
+
+pub type GhosttyTerminalScreen = c_int;
+
+pub const GHOSTTY_TERMINAL_SCREEN_PRIMARY: GhosttyTerminalScreen = 0;
+pub const GHOSTTY_TERMINAL_SCREEN_ALTERNATE: GhosttyTerminalScreen = 1;
+
+pub type GhosttyMods = u16;
+
+pub const GHOSTTY_MODS_SHIFT: GhosttyMods = 1 << 0;
+pub const GHOSTTY_MODS_CTRL: GhosttyMods = 1 << 1;
+pub const GHOSTTY_MODS_ALT: GhosttyMods = 1 << 2;
+pub const GHOSTTY_MODS_SUPER: GhosttyMods = 1 << 3;
+
+pub type GhosttyMouseAction = c_int;
+
+pub const GHOSTTY_MOUSE_ACTION_PRESS: GhosttyMouseAction = 0;
+
+pub type GhosttyMouseButton = c_int;
+
+pub const GHOSTTY_MOUSE_BUTTON_FOUR: GhosttyMouseButton = 4;
+pub const GHOSTTY_MOUSE_BUTTON_FIVE: GhosttyMouseButton = 5;
+
+pub type GhosttyMouseEncoderOption = c_int;
+
+pub const GHOSTTY_MOUSE_ENCODER_OPT_SIZE: GhosttyMouseEncoderOption = 2;
 
 pub type GhosttyTerminalScrollViewportTag = c_int;
 
@@ -116,6 +153,35 @@ pub struct GhosttyTerminalScrollViewport {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GhosttyTerminalScrollbar {
+    pub total: u64,
+    pub offset: u64,
+    pub len: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GhosttyMousePosition {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GhosttyMouseEncoderSize {
+    pub size: usize,
+    pub screen_width: u32,
+    pub screen_height: u32,
+    pub cell_width: u32,
+    pub cell_height: u32,
+    pub padding_top: u32,
+    pub padding_bottom: u32,
+    pub padding_right: u32,
+    pub padding_left: u32,
+}
+
+#[repr(C)]
 pub struct GhosttyAllocator {
     _private: [u8; 0],
 }
@@ -126,6 +192,20 @@ pub struct GhosttyTerminalImpl {
 }
 
 pub type GhosttyTerminal = *mut GhosttyTerminalImpl;
+
+#[repr(C)]
+pub struct GhosttyMouseEventImpl {
+    _private: [u8; 0],
+}
+
+pub type GhosttyMouseEvent = *mut GhosttyMouseEventImpl;
+
+#[repr(C)]
+pub struct GhosttyMouseEncoderImpl {
+    _private: [u8; 0],
+}
+
+pub type GhosttyMouseEncoder = *mut GhosttyMouseEncoderImpl;
 
 pub type GhosttyTerminalWritePtyFn = unsafe extern "C" fn(
     terminal: GhosttyTerminal,
@@ -229,6 +309,62 @@ unsafe extern "C" {
         terminal: GhosttyTerminal,
         behavior: GhosttyTerminalScrollViewport,
     );
+
+    pub fn ghostty_terminal_mode_get(
+        terminal: GhosttyTerminal,
+        mode: GhosttyMode,
+        out_value: *mut bool,
+    ) -> GhosttyResult;
+
+    pub fn ghostty_terminal_get(
+        terminal: GhosttyTerminal,
+        data: GhosttyTerminalData,
+        out: *mut c_void,
+    ) -> GhosttyResult;
+
+    pub fn ghostty_mouse_event_new(
+        allocator: *const GhosttyAllocator,
+        event: *mut GhosttyMouseEvent,
+    ) -> GhosttyResult;
+
+    pub fn ghostty_mouse_event_free(event: GhosttyMouseEvent);
+
+    pub fn ghostty_mouse_event_set_action(event: GhosttyMouseEvent, action: GhosttyMouseAction);
+
+    pub fn ghostty_mouse_event_set_button(event: GhosttyMouseEvent, button: GhosttyMouseButton);
+
+    pub fn ghostty_mouse_event_set_mods(event: GhosttyMouseEvent, mods: GhosttyMods);
+
+    pub fn ghostty_mouse_event_set_position(
+        event: GhosttyMouseEvent,
+        position: GhosttyMousePosition,
+    );
+
+    pub fn ghostty_mouse_encoder_new(
+        allocator: *const GhosttyAllocator,
+        encoder: *mut GhosttyMouseEncoder,
+    ) -> GhosttyResult;
+
+    pub fn ghostty_mouse_encoder_free(encoder: GhosttyMouseEncoder);
+
+    pub fn ghostty_mouse_encoder_setopt(
+        encoder: GhosttyMouseEncoder,
+        option: GhosttyMouseEncoderOption,
+        value: *const c_void,
+    );
+
+    pub fn ghostty_mouse_encoder_setopt_from_terminal(
+        encoder: GhosttyMouseEncoder,
+        terminal: GhosttyTerminal,
+    );
+
+    pub fn ghostty_mouse_encoder_encode(
+        encoder: GhosttyMouseEncoder,
+        event: GhosttyMouseEvent,
+        out_buf: *mut std::ffi::c_char,
+        out_buf_size: usize,
+        out_len: *mut usize,
+    ) -> GhosttyResult;
 
     pub fn ghostty_render_state_new(
         allocator: *const GhosttyAllocator,
