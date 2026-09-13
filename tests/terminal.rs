@@ -2,27 +2,36 @@ use std::ffi::c_void;
 use std::ptr;
 
 fn create_terminal(
-    options: ghostty_vt_sys::GhosttyTerminalOptions,
+    cols: u16,
+    rows: u16,
+    max_scrollback_bytes: usize,
 ) -> ghostty_vt_sys::GhosttyTerminal {
     let mut terminal: ghostty_vt_sys::GhosttyTerminal = ptr::null_mut();
 
     // SAFETY: The default allocator is selected with null, `terminal` is a valid out-pointer,
     // and callers provide non-zero terminal dimensions.
     let result =
-        unsafe { ghostty_vt_sys::ghostty_terminal_new(ptr::null(), &mut terminal, options) };
+        unsafe { ghostty_vt_sys::ghostty_terminal_new(ptr::null(), &mut terminal, cols, rows) };
 
     assert_eq!(result, ghostty_vt_sys::GHOSTTY_SUCCESS);
     assert!(!terminal.is_null());
+    // SAFETY: The terminal is live and this option borrows a size_t for the call.
+    unsafe {
+        assert_eq!(
+            ghostty_vt_sys::ghostty_terminal_set(
+                terminal,
+                ghostty_vt_sys::GHOSTTY_TERMINAL_OPT_SCROLLBACK_MAX_BYTES,
+                ptr::from_ref(&max_scrollback_bytes).cast(),
+            ),
+            ghostty_vt_sys::GHOSTTY_SUCCESS,
+        );
+    }
     terminal
 }
 
 #[test]
 fn terminal_lifecycle_and_viewport_scroll_bindings_are_callable() {
-    let terminal = create_terminal(ghostty_vt_sys::GhosttyTerminalOptions {
-        cols: 5,
-        rows: 2,
-        max_scrollback: 10,
-    });
+    let terminal = create_terminal(5, 2, 10);
 
     let output = b"one\r\ntwo\r\nthree";
     // SAFETY: `terminal` is live, and `output` remains valid for the duration of the call.
@@ -58,11 +67,7 @@ fn terminal_lifecycle_and_viewport_scroll_bindings_are_callable() {
 
 #[test]
 fn terminal_state_and_mouse_encoder_bindings_are_callable() {
-    let terminal = create_terminal(ghostty_vt_sys::GhosttyTerminalOptions {
-        cols: 5,
-        rows: 2,
-        max_scrollback: 10,
-    });
+    let terminal = create_terminal(5, 2, 10);
     let output = b"one\r\ntwo\r\nthree\x1b[?1000h\x1b[?1006h";
 
     // SAFETY: `terminal` is live, and `output` remains valid for the call.
@@ -77,7 +82,10 @@ fn terminal_state_and_mouse_encoder_bindings_are_callable() {
         len: 0,
     };
     let mut mouse_tracking = false;
-    let mut alternate_scroll = false;
+    let mut alternate_scroll = ghostty_vt_sys::GhosttyTerminalModeConfig {
+        mode: 1007, // DEC private alternate-scroll mode.
+        value: false,
+    };
 
     // SAFETY: Every output pointer matches the type documented for its queried data or mode.
     unsafe {
@@ -106,10 +114,10 @@ fn terminal_state_and_mouse_encoder_bindings_are_callable() {
             ghostty_vt_sys::GHOSTTY_SUCCESS
         );
         assert_eq!(
-            ghostty_vt_sys::ghostty_terminal_mode_get(
+            ghostty_vt_sys::ghostty_terminal_get(
                 terminal,
-                ghostty_vt_sys::GHOSTTY_MODE_ALT_SCROLL,
-                &mut alternate_scroll,
+                ghostty_vt_sys::GHOSTTY_TERMINAL_DATA_MODE,
+                ptr::from_mut(&mut alternate_scroll).cast(),
             ),
             ghostty_vt_sys::GHOSTTY_SUCCESS
         );
@@ -119,7 +127,7 @@ fn terminal_state_and_mouse_encoder_bindings_are_callable() {
     assert_eq!(scrollbar.len, 2);
     assert!(scrollbar.total >= scrollbar.offset + scrollbar.len);
     assert!(mouse_tracking);
-    assert!(alternate_scroll);
+    assert!(alternate_scroll.value);
 
     let mut event = ptr::null_mut();
     let mut encoder = ptr::null_mut();
@@ -198,16 +206,11 @@ fn terminal_state_and_mouse_encoder_bindings_are_callable() {
 
 #[test]
 fn write_pty_callback_receives_terminal_query_response() {
-    let terminal = create_terminal(ghostty_vt_sys::GhosttyTerminalOptions {
-        cols: 1,
-        rows: 1,
-        max_scrollback: 0,
-    });
+    let terminal = create_terminal(1, 1, 0);
     let mut response = Vec::<u8>::new();
-    let callback: ghostty_vt_sys::GhosttyTerminalWritePtyFn = capture_pty_write;
 
     // SAFETY: `terminal` is live. `response` remains at a stable address until after the
-    // synchronous VT write, and `callback` uses the exact C calling convention.
+    // synchronous VT write, and `capture_pty_write` uses the exact C calling convention.
     unsafe {
         assert_eq!(
             ghostty_vt_sys::ghostty_terminal_set(
@@ -221,7 +224,7 @@ fn write_pty_callback_receives_terminal_query_response() {
             ghostty_vt_sys::ghostty_terminal_set(
                 terminal,
                 ghostty_vt_sys::GHOSTTY_TERMINAL_OPT_WRITE_PTY,
-                callback as *const () as *const c_void,
+                capture_pty_write as *const () as *const c_void,
             ),
             ghostty_vt_sys::GHOSTTY_SUCCESS
         );
