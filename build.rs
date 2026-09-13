@@ -23,6 +23,29 @@ fn main() {
     let output_directory = PathBuf::from(
         env::var_os("OUT_DIR").expect("Cargo must provide OUT_DIR for build scripts"),
     );
+    bindgen::Builder::default()
+        .header(
+            ghostty_source
+                .join("include/ghostty/vt.h")
+                .to_string_lossy(),
+        )
+        // C++11 selects the headers' explicit `enum : int` declarations, matching
+        // Ghostty's Zig ABI even on Clang versions whose C enums are unsigned.
+        .clang_args(["-x", "c++", "-std=c++11"])
+        .clang_arg(format!("-I{}", ghostty_source.join("include").display()))
+        .allowlist_function("ghostty_.*")
+        .allowlist_type("Ghostty.*")
+        .allowlist_var("GHOSTTY_.*")
+        .prepend_enum_name(false)
+        .generate_comments(false)
+        // Generated build output is compiled directly; it needs no pretty printer.
+        .formatter(bindgen::Formatter::None)
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        .generate()
+        .expect("failed to generate bindings from the pinned libghostty-vt headers")
+        .write_to_file(output_directory.join("bindings.rs"))
+        .expect("failed to write libghostty-vt bindings");
+
     let install_prefix = output_directory.join("ghostty-vt");
     build_libghostty_vt(&ghostty_source, &output_directory, &install_prefix);
 
