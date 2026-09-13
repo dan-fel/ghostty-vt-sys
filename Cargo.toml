@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 description = "Raw Rust bindings and native build integration for libghostty-vt"
 repository = "https://github.com/dan-fel/ghostty-vt-sys"
+readme = "README.md"
+license = "MIT"
+keywords = ["ghostty", "terminal", "ffi", "vt"]
+categories = ["external-ffi-bindings"]
 publish = false
 links = "ghostty-vt"
 
