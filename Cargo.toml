@@ -11,8 +11,8 @@ categories = ["external-ffi-bindings"]
 publish = false
 links = "ghostty-vt"
 
-[build-dependencies]
-bindgen = { version = "0.73.2", default-features = false, features = ["runtime"] }
-
 [dev-dependencies]
 serde_json = "1"
+
+[workspace]
+members = ["generate-bindings"]

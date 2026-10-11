@@ -4,7 +4,8 @@
 
 Raw Rust bindings to [libghostty-vt](https://github.com/ghostty-org/ghostty),
 Ghostty's virtual terminal library. This crate pins the Ghostty source, builds its
-static library with Zig, and generates matching Rust declarations with bindgen.
+static library with Zig, and ships Rust declarations generated from the pinned
+headers with bindgen.
 
 Use it to embed Ghostty's terminal parser and state in a Rust application. Safe
 wrappers, PTY/process management, and rendering belong in the consuming application.
@@ -26,12 +27,9 @@ the build explicitly requires `HOST == TARGET`.
 - Stable Rust with edition 2024 support. CI tracks the stable toolchain; older
   Rust versions are not currently validated.
 - Zig compatible with the pinned Ghostty revision (currently **0.16.0**).
-- Clang/libclang for bindgen: Xcode Command Line Tools on macOS, or
-  `libclang-dev` on Debian/Ubuntu.
 
-The build uses `zig` from PATH; `ZIG` selects another executable.
-`LIBCLANG_PATH` can select a libclang installation. The pinned Ghostty source
-checks its required Zig version in `vendor/ghostty/build.zig.zon`.
+The build uses `zig` from PATH; `ZIG` selects another executable. The pinned
+Ghostty source checks its required Zig version in `vendor/ghostty/build.zig.zon`.
 
 The first build downloads Ghostty's Zig dependencies and compiles the native
 library. Cargo and Zig cache subsequent builds.
@@ -85,8 +83,10 @@ the required pointer type; sized structs must have their `size` field initialize
 Callbacks must use the declared C calling convention and must not unwind across
 the FFI boundary.
 
-Bindings are generated into Cargo's build output, with compile-time C layout
-assertions. The headers are parsed as C++11 so their explicitly signed enums match
+The bindings are committed in `src/bindings.rs`, with compile-time C layout
+assertions, so building the crate needs no Clang. They are the same on every
+supported platform; CI regenerates them on macOS and Linux and fails on any
+difference. The headers are parsed as C++11 so their explicitly signed enums match
 Ghostty's Zig ABI across the supported Clang toolchains. This does not introduce a
 C++ runtime dependency. An integration test also compares embedding layouts and
 selected enum values against the compiled library's ABI manifest.
@@ -101,11 +101,16 @@ Run the same checks as CI:
 
 ```sh
 cargo fmt --all -- --check
+cargo run -p generate-bindings -- --check
 cargo test --workspace
 cargo run --example basic
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 cargo clippy --workspace --all-targets -- -D warnings
 ```
+
+The bindings check, like regenerating the bindings, needs Clang/libclang: the
+Xcode Command Line Tools on macOS, or `libclang-dev` on Debian/Ubuntu.
+`LIBCLANG_PATH` can select a libclang installation.
 
 For contributions, keep the crate focused on raw bindings and native build
 integration. Include a regression test for behavior changes. Bug reports should
@@ -115,8 +120,9 @@ a minimal reproduction.
 ### Updating Ghostty
 
 1. Move `vendor/ghostty` to the intended upstream commit.
-2. Review header changes and adapt the integration tests and example. Declarations
-   regenerate from `vendor/ghostty/include/ghostty/vt.h`.
+2. Regenerate the declarations from `vendor/ghostty/include/ghostty/vt.h` with
+   `cargo run -p generate-bindings`. Review the header and binding changes, and
+   adapt the integration tests and example.
 3. Check `vendor/ghostty/build.zig.zon` for toolchain changes and update the CI Zig
    version, requirements, and pinned upstream links above when needed.
 4. Run the development checks and confirm the macOS and Linux CI jobs pass.

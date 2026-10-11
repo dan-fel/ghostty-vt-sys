@@ -26,10 +26,12 @@ jobs:
       - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
           version: 0.16.0
+      # Only the bindings check needs libclang; building the crate doesn't.
       - name: Install libclang
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes libclang-dev
       - run: cargo fmt --all -- --check
+      - run: cargo run -p generate-bindings -- --check
       - run: cargo test --workspace
       - run: cargo run --example basic
       - run: cargo doc --no-deps

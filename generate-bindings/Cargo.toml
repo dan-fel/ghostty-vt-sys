@@ -1,0 +1,11 @@
+[package]
+name = "generate-bindings"
+version = "0.0.0"
+edition = "2024"
+description = "Regenerates ghostty-vt-sys's committed bindings from the pinned headers"
+license = "MIT"
+publish = false
+
+[dependencies]
+# Exact, because the committed bindings are this version's output.
+bindgen = { version = "=0.73.2", default-features = false, features = ["runtime"] }
