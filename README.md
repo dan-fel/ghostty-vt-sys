@@ -19,8 +19,11 @@ break Rust callers. Pin an exact crate commit and review updates before adopting
 them. The package version alone does not identify the upstream ABI.
 
 CI validates native builds on **macOS and Linux**. Other platforms are not
-currently tested. Cross-compilation, including WebAssembly, is not supported:
-the build explicitly requires `HOST == TARGET`.
+currently tested. A cross build passes Cargo's target to Zig, as
+`<arch>-<os>[-<abi>]` from Cargo's `target_arch`, `target_os` and `target_env`;
+`GHOSTTY_VT_ZIG_TARGET` names the Zig target exactly instead, such as
+`x86_64-linux-gnu.2.28` to require no newer glibc. Cross builds are not tested
+in CI.
 
 ## Requirements
 

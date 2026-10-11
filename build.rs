@@ -13,13 +13,6 @@ fn main() {
         "Ghostty source is missing; initialize the vendor/ghostty submodule"
     );
 
-    let host = env::var("HOST").expect("Cargo must provide HOST");
-    let target = env::var("TARGET").expect("Cargo must provide TARGET");
-    assert_eq!(
-        host, target,
-        "ghostty-vt-sys does not currently support cross-compilation"
-    );
-
     let output_directory = PathBuf::from(
         env::var_os("OUT_DIR").expect("Cargo must provide OUT_DIR for build scripts"),
     );
@@ -58,12 +51,40 @@ fn build_libghostty_vt(source: &Path, install_prefix: &Path) {
         .arg("-Demit-lib-vt")
         .arg("-Demit-xcframework=false")
         .arg(format!("-Doptimize={optimization}"))
+        .args(zig_target().map(|target| format!("-Dtarget={target}")))
         .arg("--prefix")
         .arg(install_prefix)
         .status()
         .expect("failed to launch Zig while building libghostty-vt");
 
     assert!(status.success(), "libghostty-vt build failed");
+}
+
+/// The target Zig builds for: `GHOSTTY_VT_ZIG_TARGET` when set, which names
+/// it exactly (such as `x86_64-linux-gnu.2.28` for an older glibc); else
+/// Cargo's target when it is not the machine building; else none, and Zig
+/// builds for this machine.
+fn zig_target() -> Option<String> {
+    println!("cargo:rerun-if-env-changed=GHOSTTY_VT_ZIG_TARGET");
+    if let Some(target) = env::var_os("GHOSTTY_VT_ZIG_TARGET") {
+        return Some(
+            target
+                .into_string()
+                .expect("GHOSTTY_VT_ZIG_TARGET names a Zig target in ASCII"),
+        );
+    }
+    let cargo = |name: &str| env::var(name).unwrap_or_else(|_| panic!("Cargo must provide {name}"));
+    if cargo("HOST") == cargo("TARGET") {
+        return None;
+    }
+    let architecture = cargo("CARGO_CFG_TARGET_ARCH");
+    let os = cargo("CARGO_CFG_TARGET_OS");
+    let abi = cargo("CARGO_CFG_TARGET_ENV");
+    Some(if abi.is_empty() {
+        format!("{architecture}-{os}")
+    } else {
+        format!("{architecture}-{os}-{abi}")
+    })
 }
 
 /// Zig's global cache directory, as `zig env` reports it when run in `directory`.
