@@ -32,7 +32,13 @@ The build uses `zig` from PATH; `ZIG` selects another executable. The pinned
 Ghostty source checks its required Zig version in `vendor/ghostty/build.zig.zon`.
 
 The first build downloads Ghostty's Zig dependencies and compiles the native
-library. Cargo and Zig cache subsequent builds.
+library into Zig's global cache: the `global_cache_dir` that `zig env` prints,
+which is `ZIG_GLOBAL_CACHE_DIR`, else `$XDG_CACHE_HOME/zig`, else `~/.cache/zig`
+on macOS and Linux. Any later build with the same Ghostty source, Zig version,
+target and optimization mode reuses that library, whatever its Cargo target
+directory or profile. Zig locks cache entries, so concurrent builds are safe.
+Zig never prunes the cache. To reclaim the space, delete the directory while no
+Zig build runs; the next build downloads and compiles everything again.
 
 ## Getting started
 
