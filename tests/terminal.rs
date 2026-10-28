@@ -241,6 +241,60 @@ fn write_pty_callback_receives_terminal_query_response() {
     }
 }
 
+#[test]
+fn vt_write_until_stops_at_the_end_of_a_split_sequence() {
+    let terminal = create_terminal(5, 2, 0);
+    let prefix = b"\x1b[31";
+    let suffix = b"mred";
+    let mut stop = ghostty_vt_sys::GhosttyTerminalWriteStop {
+        size: size_of::<ghostty_vt_sys::GhosttyTerminalWriteStop>(),
+        consumed: 0,
+        reached: 0,
+        kind: 0,
+        introducer: 0,
+        end: 0,
+        byte: 0,
+    };
+
+    // SAFETY: The terminal is live, both input slices are valid for each call,
+    // and `stop` is an initialized, correctly sized output structure.
+    unsafe {
+        ghostty_vt_sys::ghostty_terminal_vt_write(terminal, prefix.as_ptr(), prefix.len());
+        assert_eq!(
+            ghostty_vt_sys::ghostty_terminal_vt_write_until(
+                terminal,
+                suffix.as_ptr(),
+                suffix.len(),
+                ghostty_vt_sys::GHOSTTY_TERMINAL_BOUNDARY_GROUND as u32,
+                &mut stop,
+            ),
+            ghostty_vt_sys::GHOSTTY_SUCCESS,
+        );
+        assert_eq!(stop.consumed, 1);
+        assert_eq!(
+            stop.reached,
+            ghostty_vt_sys::GHOSTTY_TERMINAL_BOUNDARY_GROUND as u32
+        );
+        ghostty_vt_sys::ghostty_terminal_free(terminal);
+    }
+}
+
+#[test]
+fn paste_safety_rejects_both_line_terminators() {
+    for (text, safe) in [
+        (b"plain text".as_slice(), true),
+        (b"command\n".as_slice(), false),
+        (b"command\r".as_slice(), false),
+        (b"\x1b[201~command".as_slice(), false),
+    ] {
+        // SAFETY: The borrowed input slice is valid for the complete call.
+        assert_eq!(
+            unsafe { ghostty_vt_sys::ghostty_paste_is_safe(text.as_ptr().cast(), text.len()) },
+            safe
+        );
+    }
+}
+
 unsafe extern "C" fn capture_pty_write(
     _terminal: ghostty_vt_sys::GhosttyTerminal,
     userdata: *mut c_void,

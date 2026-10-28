@@ -32,6 +32,15 @@ fn embedding_layouts_match_the_native_library() {
     check_layout!(GhosttyTerminalScrollViewport { tag, value });
     check_layout!(GhosttyTerminalScrollViewportValue { delta, row });
     check_layout!(GhosttyTerminalScrollbar { total, offset, len });
+    check_layout!(GhosttyTerminalWriteStop {
+        size,
+        consumed,
+        reached,
+        kind,
+        introducer,
+        end,
+        byte,
+    });
     check_layout!(GhosttyMousePosition { x, y });
     check_layout!(GhosttyMouseEncoderSize {
         size,

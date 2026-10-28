@@ -5,7 +5,7 @@
 Raw Rust bindings to [libghostty-vt](https://github.com/ghostty-org/ghostty),
 Ghostty's virtual terminal library. This crate pins the Ghostty source, builds its
 static library with Zig, and ships Rust declarations generated from the pinned
-headers with bindgen.
+headers with bindgen. The current pin is **Ghostty 1.4.0**.
 
 Use it to embed Ghostty's terminal parser and state in a Rust application. Safe
 wrappers, PTY/process management, and rendering belong in the consuming application.
@@ -29,7 +29,7 @@ in CI.
 
 - Stable Rust with edition 2024 support. CI tracks the stable toolchain; older
   Rust versions are not currently validated.
-- Zig compatible with the pinned Ghostty revision (currently **0.16.0**).
+- Zig compatible with the pinned Ghostty revision (currently **0.17.0**).
 
 The build uses `zig` from PATH; `ZIG` selects another executable. The pinned
 Ghostty source checks its required Zig version in `vendor/ghostty/build.zig.zon`.
@@ -81,7 +81,7 @@ name `ghostty_vt_sys`.
 
 ## API and safety contracts
 
-The [pinned C headers](https://github.com/ghostty-org/ghostty/blob/09a2724c23fd13f7cd24c093c568a4b6792a66a2/include/ghostty/vt.h)
+The [pinned C headers](https://github.com/ghostty-org/ghostty/blob/83fb95624b0439ee660c2679b43b38c8b63769cd/include/ghostty/vt.h)
 document the API and are the source of truth for the generated declarations.
 Generate local Rust API reference pages with `cargo doc --no-deps --open`.
 
@@ -141,6 +141,6 @@ a minimal reproduction.
 ## License
 
 This crate is licensed under the [MIT License](LICENSE).
-[Ghostty](https://github.com/ghostty-org/ghostty/blob/09a2724c23fd13f7cd24c093c568a4b6792a66a2/LICENSE)
+[Ghostty](https://github.com/ghostty-org/ghostty/blob/83fb95624b0439ee660c2679b43b38c8b63769cd/LICENSE)
 is also MIT-licensed and retains its own copyright notice in
 `vendor/ghostty/LICENSE`.

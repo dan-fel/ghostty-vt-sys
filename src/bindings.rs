@@ -144,6 +144,12 @@ pub struct GhosttyRenderStateRowCellsImpl {
 pub type GhosttyRenderStateRowCells = *mut GhosttyRenderStateRowCellsImpl;
 #[repr(C)]
 #[derive(Debug)]
+pub struct GhosttyRenderStateImageIteratorImpl {
+    _unused: [u8; 0],
+}
+pub type GhosttyRenderStateImageIterator = *mut GhosttyRenderStateImageIteratorImpl;
+#[repr(C)]
+#[derive(Debug)]
 pub struct GhosttySearchImpl {
     _unused: [u8; 0],
 }
@@ -1326,10 +1332,91 @@ unsafe extern "C" {
         out_written: *mut usize,
     ) -> GhosttyResult;
 }
+pub const GHOSTTY_OSC_COMMAND_INVALID: GhosttyOscCommandType = 0;
+pub const GHOSTTY_OSC_COMMAND_CHANGE_WINDOW_TITLE: GhosttyOscCommandType = 1;
+pub const GHOSTTY_OSC_COMMAND_CHANGE_WINDOW_ICON: GhosttyOscCommandType = 2;
+pub const GHOSTTY_OSC_COMMAND_SEMANTIC_PROMPT: GhosttyOscCommandType = 3;
+pub const GHOSTTY_OSC_COMMAND_CLIPBOARD_CONTENTS: GhosttyOscCommandType = 4;
+pub const GHOSTTY_OSC_COMMAND_REPORT_PWD: GhosttyOscCommandType = 5;
+pub const GHOSTTY_OSC_COMMAND_MOUSE_SHAPE: GhosttyOscCommandType = 6;
+pub const GHOSTTY_OSC_COMMAND_COLOR_OPERATION: GhosttyOscCommandType = 7;
+pub const GHOSTTY_OSC_COMMAND_KITTY_COLOR_PROTOCOL: GhosttyOscCommandType = 8;
+pub const GHOSTTY_OSC_COMMAND_SHOW_DESKTOP_NOTIFICATION: GhosttyOscCommandType = 9;
+pub const GHOSTTY_OSC_COMMAND_HYPERLINK_START: GhosttyOscCommandType = 10;
+pub const GHOSTTY_OSC_COMMAND_HYPERLINK_END: GhosttyOscCommandType = 11;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_SLEEP: GhosttyOscCommandType = 12;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_SHOW_MESSAGE_BOX: GhosttyOscCommandType = 13;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_CHANGE_TAB_TITLE: GhosttyOscCommandType = 14;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_PROGRESS_REPORT: GhosttyOscCommandType = 15;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_WAIT_INPUT: GhosttyOscCommandType = 16;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_GUIMACRO: GhosttyOscCommandType = 17;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_RUN_PROCESS: GhosttyOscCommandType = 18;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_OUTPUT_ENVIRONMENT_VARIABLE: GhosttyOscCommandType = 19;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_XTERM_EMULATION: GhosttyOscCommandType = 20;
+pub const GHOSTTY_OSC_COMMAND_CONEMU_COMMENT: GhosttyOscCommandType = 21;
+pub const GHOSTTY_OSC_COMMAND_KITTY_TEXT_SIZING: GhosttyOscCommandType = 22;
+pub const GHOSTTY_OSC_COMMAND_KITTY_CLIPBOARD_PROTOCOL: GhosttyOscCommandType = 23;
+pub const GHOSTTY_OSC_COMMAND_KITTY_DND_PROTOCOL: GhosttyOscCommandType = 24;
+pub const GHOSTTY_OSC_COMMAND_HIERARCHICAL_CONTEXT: GhosttyOscCommandType = 25;
+pub const GHOSTTY_OSC_COMMAND_KITTY_DESKTOP_NOTIFICATION: GhosttyOscCommandType = 26;
+pub const GHOSTTY_OSC_COMMAND_UNKNOWN: GhosttyOscCommandType = 27;
+pub const GHOSTTY_OSC_COMMAND_PROGRAM_STATUS: GhosttyOscCommandType = 28;
+pub const GHOSTTY_OSC_COMMAND_TYPE_MAX_VALUE: GhosttyOscCommandType = 2147483647;
+pub type GhosttyOscCommandType = ::std::os::raw::c_int;
+pub const GHOSTTY_OSC_TERMINATOR_ST: GhosttyOscTerminator = 0;
+pub const GHOSTTY_OSC_TERMINATOR_BEL: GhosttyOscTerminator = 1;
+pub const GHOSTTY_OSC_TERMINATOR_MAX_VALUE: GhosttyOscTerminator = 2147483647;
+pub type GhosttyOscTerminator = ::std::os::raw::c_int;
+pub const GHOSTTY_OSC_OPT_UNKNOWN_MAX_BYTES: GhosttyOscOption = 0;
+pub const GHOSTTY_OSC_OPT_MAX_VALUE: GhosttyOscOption = 2147483647;
+pub type GhosttyOscOption = ::std::os::raw::c_int;
+pub const GHOSTTY_OSC_DATA_INVALID: GhosttyOscCommandData = 0;
+pub const GHOSTTY_OSC_DATA_CHANGE_WINDOW_TITLE_STR: GhosttyOscCommandData = 1;
+pub const GHOSTTY_OSC_DATA_UNKNOWN_CONTENT: GhosttyOscCommandData = 2;
+pub const GHOSTTY_OSC_DATA_UNKNOWN_TRUNCATED: GhosttyOscCommandData = 3;
+pub const GHOSTTY_OSC_DATA_UNKNOWN_TERMINATOR: GhosttyOscCommandData = 4;
+pub const GHOSTTY_OSC_DATA_MAX_VALUE: GhosttyOscCommandData = 2147483647;
+pub type GhosttyOscCommandData = ::std::os::raw::c_int;
+unsafe extern "C" {
+    pub fn ghostty_osc_new(
+        allocator: *const GhosttyAllocator,
+        parser: *mut GhosttyOscParser,
+    ) -> GhosttyResult;
+}
+unsafe extern "C" {
+    pub fn ghostty_osc_free(parser: GhosttyOscParser);
+}
+unsafe extern "C" {
+    pub fn ghostty_osc_reset(parser: GhosttyOscParser);
+}
+unsafe extern "C" {
+    pub fn ghostty_osc_set(
+        parser: GhosttyOscParser,
+        option: GhosttyOscOption,
+        value: *const ::std::os::raw::c_void,
+    ) -> GhosttyResult;
+}
+unsafe extern "C" {
+    pub fn ghostty_osc_next(parser: GhosttyOscParser, byte: u8);
+}
+unsafe extern "C" {
+    pub fn ghostty_osc_end(parser: GhosttyOscParser, terminator: u8) -> GhosttyOscCommand;
+}
+unsafe extern "C" {
+    pub fn ghostty_osc_command_type(command: GhosttyOscCommand) -> GhosttyOscCommandType;
+}
+unsafe extern "C" {
+    pub fn ghostty_osc_command_data(
+        command: GhosttyOscCommand,
+        data: GhosttyOscCommandData,
+        out: *mut ::std::os::raw::c_void,
+    ) -> bool;
+}
 pub const GHOSTTY_SIZE_REPORT_MODE_2048: GhosttySizeReportStyle = 0;
 pub const GHOSTTY_SIZE_REPORT_CSI_14_T: GhosttySizeReportStyle = 1;
 pub const GHOSTTY_SIZE_REPORT_CSI_16_T: GhosttySizeReportStyle = 2;
 pub const GHOSTTY_SIZE_REPORT_CSI_18_T: GhosttySizeReportStyle = 3;
+pub const GHOSTTY_SIZE_REPORT_CSI_19_T: GhosttySizeReportStyle = 4;
 pub const GHOSTTY_SIZE_REPORT_STYLE_MAX_VALUE: GhosttySizeReportStyle = 2147483647;
 pub type GhosttySizeReportStyle = ::std::os::raw::c_int;
 #[repr(C)]
@@ -1476,6 +1563,13 @@ unsafe extern "C" {
     ) -> GhosttyResult;
 }
 unsafe extern "C" {
+    pub fn ghostty_kitty_graphics_animation_tick(
+        graphics: GhosttyKittyGraphics,
+        now_ms: u64,
+        next_ms: *mut u64,
+    ) -> GhosttyResult;
+}
+unsafe extern "C" {
     pub fn ghostty_kitty_graphics_image(
         graphics: GhosttyKittyGraphics,
         image_id: u32,
@@ -1603,6 +1697,7 @@ pub const GHOSTTY_SCROLL_VIEWPORT_TOP: GhosttyTerminalScrollViewportTag = 0;
 pub const GHOSTTY_SCROLL_VIEWPORT_BOTTOM: GhosttyTerminalScrollViewportTag = 1;
 pub const GHOSTTY_SCROLL_VIEWPORT_DELTA: GhosttyTerminalScrollViewportTag = 2;
 pub const GHOSTTY_SCROLL_VIEWPORT_ROW: GhosttyTerminalScrollViewportTag = 3;
+pub const GHOSTTY_SCROLL_VIEWPORT_DELTA_PROMPT: GhosttyTerminalScrollViewportTag = 4;
 pub const GHOSTTY_SCROLL_VIEWPORT_MAX_VALUE: GhosttyTerminalScrollViewportTag = 2147483647;
 pub type GhosttyTerminalScrollViewportTag = ::std::os::raw::c_int;
 #[repr(C)]
@@ -1610,6 +1705,7 @@ pub type GhosttyTerminalScrollViewportTag = ::std::os::raw::c_int;
 pub union GhosttyTerminalScrollViewportValue {
     pub delta: isize,
     pub row: usize,
+    pub delta_prompt: isize,
     pub _padding: [u64; 2usize],
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -1622,6 +1718,8 @@ const _: () = {
         [::std::mem::offset_of!(GhosttyTerminalScrollViewportValue, delta) - 0usize];
     ["Offset of field: GhosttyTerminalScrollViewportValue::row"]
         [::std::mem::offset_of!(GhosttyTerminalScrollViewportValue, row) - 0usize];
+    ["Offset of field: GhosttyTerminalScrollViewportValue::delta_prompt"]
+        [::std::mem::offset_of!(GhosttyTerminalScrollViewportValue, delta_prompt) - 0usize];
     ["Offset of field: GhosttyTerminalScrollViewportValue::_padding"]
         [::std::mem::offset_of!(GhosttyTerminalScrollViewportValue, _padding) - 0usize];
 };
@@ -1652,6 +1750,64 @@ pub const GHOSTTY_TERMINAL_CURSOR_STYLE_UNDERLINE: GhosttyTerminalCursorStyle = 
 pub const GHOSTTY_TERMINAL_CURSOR_STYLE_BLOCK_HOLLOW: GhosttyTerminalCursorStyle = 3;
 pub const GHOSTTY_TERMINAL_CURSOR_STYLE_MAX_VALUE: GhosttyTerminalCursorStyle = 2147483647;
 pub type GhosttyTerminalCursorStyle = ::std::os::raw::c_int;
+pub const GHOSTTY_TERMINAL_BOUNDARY_GROUND: GhosttyTerminalBoundary = 1;
+pub const GHOSTTY_TERMINAL_BOUNDARY_APC_START: GhosttyTerminalBoundary = 2;
+pub const GHOSTTY_TERMINAL_BOUNDARY_APC_END: GhosttyTerminalBoundary = 4;
+pub const GHOSTTY_TERMINAL_BOUNDARY_DCS_START: GhosttyTerminalBoundary = 8;
+pub const GHOSTTY_TERMINAL_BOUNDARY_DCS_END: GhosttyTerminalBoundary = 16;
+pub const GHOSTTY_TERMINAL_BOUNDARY_OSC_START: GhosttyTerminalBoundary = 32;
+pub const GHOSTTY_TERMINAL_BOUNDARY_OSC_END: GhosttyTerminalBoundary = 64;
+pub const GHOSTTY_TERMINAL_BOUNDARY_MAX_VALUE: GhosttyTerminalBoundary = 2147483647;
+pub type GhosttyTerminalBoundary = ::std::os::raw::c_int;
+pub const GHOSTTY_TERMINAL_STRING_KIND_APC: GhosttyTerminalStringKind = 0;
+pub const GHOSTTY_TERMINAL_STRING_KIND_DCS: GhosttyTerminalStringKind = 1;
+pub const GHOSTTY_TERMINAL_STRING_KIND_OSC: GhosttyTerminalStringKind = 2;
+pub const GHOSTTY_TERMINAL_STRING_KIND_MAX_VALUE: GhosttyTerminalStringKind = 2147483647;
+pub type GhosttyTerminalStringKind = ::std::os::raw::c_int;
+pub const GHOSTTY_TERMINAL_STRING_INTRODUCER_ESC: GhosttyTerminalStringIntroducer = 0;
+pub const GHOSTTY_TERMINAL_STRING_INTRODUCER_C1: GhosttyTerminalStringIntroducer = 1;
+pub const GHOSTTY_TERMINAL_STRING_INTRODUCER_MAX_VALUE: GhosttyTerminalStringIntroducer =
+    2147483647;
+pub type GhosttyTerminalStringIntroducer = ::std::os::raw::c_int;
+pub const GHOSTTY_TERMINAL_STRING_END_ST_ESC: GhosttyTerminalStringEnd = 0;
+pub const GHOSTTY_TERMINAL_STRING_END_ST_C1: GhosttyTerminalStringEnd = 1;
+pub const GHOSTTY_TERMINAL_STRING_END_CANCELLED: GhosttyTerminalStringEnd = 2;
+pub const GHOSTTY_TERMINAL_STRING_END_ABORTED: GhosttyTerminalStringEnd = 3;
+pub const GHOSTTY_TERMINAL_STRING_END_BEL: GhosttyTerminalStringEnd = 4;
+pub const GHOSTTY_TERMINAL_STRING_END_MAX_VALUE: GhosttyTerminalStringEnd = 2147483647;
+pub type GhosttyTerminalStringEnd = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyTerminalWriteStop {
+    pub size: usize,
+    pub consumed: usize,
+    pub reached: u32,
+    pub kind: GhosttyTerminalStringKind,
+    pub introducer: GhosttyTerminalStringIntroducer,
+    pub end: GhosttyTerminalStringEnd,
+    pub byte: u8,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalWriteStop"]
+        [::std::mem::size_of::<GhosttyTerminalWriteStop>() - 40usize];
+    ["Alignment of GhosttyTerminalWriteStop"]
+        [::std::mem::align_of::<GhosttyTerminalWriteStop>() - 8usize];
+    ["Offset of field: GhosttyTerminalWriteStop::size"]
+        [::std::mem::offset_of!(GhosttyTerminalWriteStop, size) - 0usize];
+    ["Offset of field: GhosttyTerminalWriteStop::consumed"]
+        [::std::mem::offset_of!(GhosttyTerminalWriteStop, consumed) - 8usize];
+    ["Offset of field: GhosttyTerminalWriteStop::reached"]
+        [::std::mem::offset_of!(GhosttyTerminalWriteStop, reached) - 16usize];
+    ["Offset of field: GhosttyTerminalWriteStop::kind"]
+        [::std::mem::offset_of!(GhosttyTerminalWriteStop, kind) - 20usize];
+    ["Offset of field: GhosttyTerminalWriteStop::introducer"]
+        [::std::mem::offset_of!(GhosttyTerminalWriteStop, introducer) - 24usize];
+    ["Offset of field: GhosttyTerminalWriteStop::end"]
+        [::std::mem::offset_of!(GhosttyTerminalWriteStop, end) - 28usize];
+    ["Offset of field: GhosttyTerminalWriteStop::byte"]
+        [::std::mem::offset_of!(GhosttyTerminalWriteStop, byte) - 32usize];
+};
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GhosttyTerminalScrollbar {
@@ -1672,10 +1828,64 @@ const _: () = {
     ["Offset of field: GhosttyTerminalScrollbar::len"]
         [::std::mem::offset_of!(GhosttyTerminalScrollbar, len) - 16usize];
 };
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyTerminalMemoryUsage {
+    pub size: usize,
+    pub compression_supported: bool,
+    pub primary_pages: u64,
+    pub primary_virtual_bytes: u64,
+    pub primary_resident_bytes: u64,
+    pub primary_compressed_pages: u64,
+    pub primary_compressed_bytes: u64,
+    pub primary_image_bytes: u64,
+    pub alternate_pages: u64,
+    pub alternate_virtual_bytes: u64,
+    pub alternate_resident_bytes: u64,
+    pub alternate_compressed_pages: u64,
+    pub alternate_compressed_bytes: u64,
+    pub alternate_image_bytes: u64,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalMemoryUsage"]
+        [::std::mem::size_of::<GhosttyTerminalMemoryUsage>() - 112usize];
+    ["Alignment of GhosttyTerminalMemoryUsage"]
+        [::std::mem::align_of::<GhosttyTerminalMemoryUsage>() - 8usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::size"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, size) - 0usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::compression_supported"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, compression_supported) - 8usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::primary_pages"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, primary_pages) - 16usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::primary_virtual_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, primary_virtual_bytes) - 24usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::primary_resident_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, primary_resident_bytes) - 32usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::primary_compressed_pages"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, primary_compressed_pages) - 40usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::primary_compressed_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, primary_compressed_bytes) - 48usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::primary_image_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, primary_image_bytes) - 56usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::alternate_pages"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, alternate_pages) - 64usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::alternate_virtual_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, alternate_virtual_bytes) - 72usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::alternate_resident_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, alternate_resident_bytes) - 80usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::alternate_compressed_pages"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, alternate_compressed_pages) - 88usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::alternate_compressed_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, alternate_compressed_bytes) - 96usize];
+    ["Offset of field: GhosttyTerminalMemoryUsage::alternate_image_bytes"]
+        [::std::mem::offset_of!(GhosttyTerminalMemoryUsage, alternate_image_bytes) - 104usize];
+};
 pub type GhosttyTerminalBellFn = ::std::option::Option<
     unsafe extern "C" fn(terminal: GhosttyTerminal, userdata: *mut ::std::os::raw::c_void),
 >;
 pub const GHOSTTY_TERMINAL_UNKNOWN_SEQUENCE_APC: GhosttyTerminalUnknownSequenceTag = 0;
+pub const GHOSTTY_TERMINAL_UNKNOWN_SEQUENCE_OSC: GhosttyTerminalUnknownSequenceTag = 1;
 pub const GHOSTTY_TERMINAL_UNKNOWN_SEQUENCE_MAX_VALUE: GhosttyTerminalUnknownSequenceTag =
     2147483647;
 pub type GhosttyTerminalUnknownSequenceTag = ::std::os::raw::c_int;
@@ -1697,9 +1907,30 @@ const _: () = {
         [::std::mem::offset_of!(GhosttyTerminalUnknownStringSequence, content) - 8usize];
 };
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyTerminalUnknownOscSequence {
+    pub truncated: bool,
+    pub content: GhosttyString,
+    pub terminator: GhosttyOscTerminator,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalUnknownOscSequence"]
+        [::std::mem::size_of::<GhosttyTerminalUnknownOscSequence>() - 32usize];
+    ["Alignment of GhosttyTerminalUnknownOscSequence"]
+        [::std::mem::align_of::<GhosttyTerminalUnknownOscSequence>() - 8usize];
+    ["Offset of field: GhosttyTerminalUnknownOscSequence::truncated"]
+        [::std::mem::offset_of!(GhosttyTerminalUnknownOscSequence, truncated) - 0usize];
+    ["Offset of field: GhosttyTerminalUnknownOscSequence::content"]
+        [::std::mem::offset_of!(GhosttyTerminalUnknownOscSequence, content) - 8usize];
+    ["Offset of field: GhosttyTerminalUnknownOscSequence::terminator"]
+        [::std::mem::offset_of!(GhosttyTerminalUnknownOscSequence, terminator) - 24usize];
+};
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub union GhosttyTerminalUnknownSequenceValue {
     pub apc: GhosttyTerminalUnknownStringSequence,
+    pub osc: GhosttyTerminalUnknownOscSequence,
     pub _padding: [u64; 16usize],
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -1710,6 +1941,8 @@ const _: () = {
         [::std::mem::align_of::<GhosttyTerminalUnknownSequenceValue>() - 8usize];
     ["Offset of field: GhosttyTerminalUnknownSequenceValue::apc"]
         [::std::mem::offset_of!(GhosttyTerminalUnknownSequenceValue, apc) - 0usize];
+    ["Offset of field: GhosttyTerminalUnknownSequenceValue::osc"]
+        [::std::mem::offset_of!(GhosttyTerminalUnknownSequenceValue, osc) - 0usize];
     ["Offset of field: GhosttyTerminalUnknownSequenceValue::_padding"]
         [::std::mem::offset_of!(GhosttyTerminalUnknownSequenceValue, _padding) - 0usize];
 };
@@ -1988,6 +2221,178 @@ pub type GhosttyTerminalProgressReportFn = ::std::option::Option<
         report: *const GhosttyTerminalProgressReport,
     ),
 >;
+pub const GHOSTTY_PROGRAM_STATUS_STATE_IDLE: GhosttyProgramStatusState = 0;
+pub const GHOSTTY_PROGRAM_STATUS_STATE_WORKING: GhosttyProgramStatusState = 1;
+pub const GHOSTTY_PROGRAM_STATUS_STATE_DONE: GhosttyProgramStatusState = 2;
+pub const GHOSTTY_PROGRAM_STATUS_STATE_BLOCKED: GhosttyProgramStatusState = 3;
+pub const GHOSTTY_PROGRAM_STATUS_STATE_ERROR: GhosttyProgramStatusState = 4;
+pub const GHOSTTY_PROGRAM_STATUS_STATE_CLEAR: GhosttyProgramStatusState = 5;
+pub const GHOSTTY_PROGRAM_STATUS_STATE_MAX_VALUE: GhosttyProgramStatusState = 2147483647;
+pub type GhosttyProgramStatusState = ::std::os::raw::c_int;
+pub const GHOSTTY_PROGRAM_STATUS_KIND_NONE: GhosttyProgramStatusKind = 0;
+pub const GHOSTTY_PROGRAM_STATUS_KIND_PERMISSION: GhosttyProgramStatusKind = 1;
+pub const GHOSTTY_PROGRAM_STATUS_KIND_QUESTION: GhosttyProgramStatusKind = 2;
+pub const GHOSTTY_PROGRAM_STATUS_KIND_AUTH: GhosttyProgramStatusKind = 3;
+pub const GHOSTTY_PROGRAM_STATUS_KIND_MAX_VALUE: GhosttyProgramStatusKind = 2147483647;
+pub type GhosttyProgramStatusKind = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyTerminalProgramStatus {
+    pub size: usize,
+    pub state: GhosttyProgramStatusState,
+    pub kind: GhosttyProgramStatusKind,
+    pub progress: i8,
+    pub id: GhosttyString,
+    pub app: GhosttyString,
+    pub title: GhosttyString,
+    pub message: GhosttyString,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalProgramStatus"]
+        [::std::mem::size_of::<GhosttyTerminalProgramStatus>() - 88usize];
+    ["Alignment of GhosttyTerminalProgramStatus"]
+        [::std::mem::align_of::<GhosttyTerminalProgramStatus>() - 8usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::size"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, size) - 0usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::state"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, state) - 8usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::kind"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, kind) - 12usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::progress"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, progress) - 16usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::id"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, id) - 24usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::app"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, app) - 40usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::title"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, title) - 56usize];
+    ["Offset of field: GhosttyTerminalProgramStatus::message"]
+        [::std::mem::offset_of!(GhosttyTerminalProgramStatus, message) - 72usize];
+};
+pub type GhosttyTerminalProgramStatusFn = ::std::option::Option<
+    unsafe extern "C" fn(
+        terminal: GhosttyTerminal,
+        userdata: *mut ::std::os::raw::c_void,
+        report: *const GhosttyTerminalProgramStatus,
+    ),
+>;
+pub const GHOSTTY_SEMANTIC_PROMPT_INVALID: GhosttySemanticPromptKind = 0;
+pub const GHOSTTY_SEMANTIC_PROMPT_PROMPT_START: GhosttySemanticPromptKind = 1;
+pub const GHOSTTY_SEMANTIC_PROMPT_INPUT_START: GhosttySemanticPromptKind = 2;
+pub const GHOSTTY_SEMANTIC_PROMPT_OUTPUT_START: GhosttySemanticPromptKind = 3;
+pub const GHOSTTY_SEMANTIC_PROMPT_COMMAND_END: GhosttySemanticPromptKind = 4;
+pub const GHOSTTY_SEMANTIC_PROMPT_MAX_VALUE: GhosttySemanticPromptKind = 2147483647;
+pub type GhosttySemanticPromptKind = ::std::os::raw::c_int;
+pub const GHOSTTY_SEMANTIC_PROMPT_PROMPT_PRIMARY: GhosttySemanticPromptPromptKind = 0;
+pub const GHOSTTY_SEMANTIC_PROMPT_PROMPT_RIGHT: GhosttySemanticPromptPromptKind = 1;
+pub const GHOSTTY_SEMANTIC_PROMPT_PROMPT_CONTINUATION: GhosttySemanticPromptPromptKind = 2;
+pub const GHOSTTY_SEMANTIC_PROMPT_PROMPT_SECONDARY: GhosttySemanticPromptPromptKind = 3;
+pub const GHOSTTY_SEMANTIC_PROMPT_PROMPT_MAX_VALUE: GhosttySemanticPromptPromptKind = 2147483647;
+pub type GhosttySemanticPromptPromptKind = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyTerminalSemanticPrompt {
+    pub size: usize,
+    pub kind: GhosttySemanticPromptKind,
+    pub prompt_kind: GhosttySemanticPromptPromptKind,
+    pub has_exit_code: bool,
+    pub exit_code: i32,
+    pub command: GhosttyString,
+    pub error: GhosttyString,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalSemanticPrompt"]
+        [::std::mem::size_of::<GhosttyTerminalSemanticPrompt>() - 56usize];
+    ["Alignment of GhosttyTerminalSemanticPrompt"]
+        [::std::mem::align_of::<GhosttyTerminalSemanticPrompt>() - 8usize];
+    ["Offset of field: GhosttyTerminalSemanticPrompt::size"]
+        [::std::mem::offset_of!(GhosttyTerminalSemanticPrompt, size) - 0usize];
+    ["Offset of field: GhosttyTerminalSemanticPrompt::kind"]
+        [::std::mem::offset_of!(GhosttyTerminalSemanticPrompt, kind) - 8usize];
+    ["Offset of field: GhosttyTerminalSemanticPrompt::prompt_kind"]
+        [::std::mem::offset_of!(GhosttyTerminalSemanticPrompt, prompt_kind) - 12usize];
+    ["Offset of field: GhosttyTerminalSemanticPrompt::has_exit_code"]
+        [::std::mem::offset_of!(GhosttyTerminalSemanticPrompt, has_exit_code) - 16usize];
+    ["Offset of field: GhosttyTerminalSemanticPrompt::exit_code"]
+        [::std::mem::offset_of!(GhosttyTerminalSemanticPrompt, exit_code) - 20usize];
+    ["Offset of field: GhosttyTerminalSemanticPrompt::command"]
+        [::std::mem::offset_of!(GhosttyTerminalSemanticPrompt, command) - 24usize];
+    ["Offset of field: GhosttyTerminalSemanticPrompt::error"]
+        [::std::mem::offset_of!(GhosttyTerminalSemanticPrompt, error) - 40usize];
+};
+pub type GhosttyTerminalSemanticPromptFn = ::std::option::Option<
+    unsafe extern "C" fn(
+        terminal: GhosttyTerminal,
+        userdata: *mut ::std::os::raw::c_void,
+        event: *const GhosttyTerminalSemanticPrompt,
+    ),
+>;
+pub type GhosttyTerminalResetFn = ::std::option::Option<
+    unsafe extern "C" fn(terminal: GhosttyTerminal, userdata: *mut ::std::os::raw::c_void),
+>;
+pub const GHOSTTY_TERMINAL_RESIZE_WINDOW_GRID: GhosttyTerminalResizeWindowTag = 0;
+pub const GHOSTTY_TERMINAL_RESIZE_WINDOW_MAX_VALUE: GhosttyTerminalResizeWindowTag = 2147483647;
+pub type GhosttyTerminalResizeWindowTag = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyTerminalResizeWindowGrid {
+    pub rows: u16,
+    pub columns: u16,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalResizeWindowGrid"]
+        [::std::mem::size_of::<GhosttyTerminalResizeWindowGrid>() - 4usize];
+    ["Alignment of GhosttyTerminalResizeWindowGrid"]
+        [::std::mem::align_of::<GhosttyTerminalResizeWindowGrid>() - 2usize];
+    ["Offset of field: GhosttyTerminalResizeWindowGrid::rows"]
+        [::std::mem::offset_of!(GhosttyTerminalResizeWindowGrid, rows) - 0usize];
+    ["Offset of field: GhosttyTerminalResizeWindowGrid::columns"]
+        [::std::mem::offset_of!(GhosttyTerminalResizeWindowGrid, columns) - 2usize];
+};
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union GhosttyTerminalResizeWindowValue {
+    pub grid: GhosttyTerminalResizeWindowGrid,
+    pub _padding: [u64; 2usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalResizeWindowValue"]
+        [::std::mem::size_of::<GhosttyTerminalResizeWindowValue>() - 16usize];
+    ["Alignment of GhosttyTerminalResizeWindowValue"]
+        [::std::mem::align_of::<GhosttyTerminalResizeWindowValue>() - 8usize];
+    ["Offset of field: GhosttyTerminalResizeWindowValue::grid"]
+        [::std::mem::offset_of!(GhosttyTerminalResizeWindowValue, grid) - 0usize];
+    ["Offset of field: GhosttyTerminalResizeWindowValue::_padding"]
+        [::std::mem::offset_of!(GhosttyTerminalResizeWindowValue, _padding) - 0usize];
+};
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct GhosttyTerminalResizeWindow {
+    pub tag: GhosttyTerminalResizeWindowTag,
+    pub value: GhosttyTerminalResizeWindowValue,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyTerminalResizeWindow"]
+        [::std::mem::size_of::<GhosttyTerminalResizeWindow>() - 24usize];
+    ["Alignment of GhosttyTerminalResizeWindow"]
+        [::std::mem::align_of::<GhosttyTerminalResizeWindow>() - 8usize];
+    ["Offset of field: GhosttyTerminalResizeWindow::tag"]
+        [::std::mem::offset_of!(GhosttyTerminalResizeWindow, tag) - 0usize];
+    ["Offset of field: GhosttyTerminalResizeWindow::value"]
+        [::std::mem::offset_of!(GhosttyTerminalResizeWindow, value) - 8usize];
+};
+pub type GhosttyTerminalResizeWindowFn = ::std::option::Option<
+    unsafe extern "C" fn(
+        terminal: GhosttyTerminal,
+        userdata: *mut ::std::os::raw::c_void,
+        request: *const GhosttyTerminalResizeWindow,
+    ),
+>;
 pub type GhosttyTerminalColorSchemeFn = ::std::option::Option<
     unsafe extern "C" fn(
         terminal: GhosttyTerminal,
@@ -2017,6 +2422,13 @@ pub type GhosttyTerminalSizeFn = ::std::option::Option<
 >;
 pub type GhosttyTerminalTitleChangedFn = ::std::option::Option<
     unsafe extern "C" fn(terminal: GhosttyTerminal, userdata: *mut ::std::os::raw::c_void),
+>;
+pub type GhosttyTerminalRenderHoldFn = ::std::option::Option<
+    unsafe extern "C" fn(
+        terminal: GhosttyTerminal,
+        userdata: *mut ::std::os::raw::c_void,
+        held: bool,
+    ),
 >;
 pub type GhosttyTerminalPwdChangedFn = ::std::option::Option<
     unsafe extern "C" fn(terminal: GhosttyTerminal, userdata: *mut ::std::os::raw::c_void),
@@ -2092,6 +2504,14 @@ pub const GHOSTTY_TERMINAL_OPT_UNKNOWN_MAX_BYTES: GhosttyTerminalOption = 36;
 pub const GHOSTTY_TERMINAL_OPT_TERMINFO_NAME: GhosttyTerminalOption = 37;
 pub const GHOSTTY_TERMINAL_OPT_CLIPBOARD_READ: GhosttyTerminalOption = 38;
 pub const GHOSTTY_TERMINAL_OPT_CLIPBOARD_WRITE_MAX_BYTES: GhosttyTerminalOption = 39;
+pub const GHOSTTY_TERMINAL_OPT_RESIZE_PULL_SCROLLBACK: GhosttyTerminalOption = 40;
+pub const GHOSTTY_TERMINAL_OPT_RENDER_HOLD: GhosttyTerminalOption = 41;
+pub const GHOSTTY_TERMINAL_OPT_SEMANTIC_PROMPT: GhosttyTerminalOption = 42;
+pub const GHOSTTY_TERMINAL_OPT_RESET: GhosttyTerminalOption = 43;
+pub const GHOSTTY_TERMINAL_OPT_XT_CHECKSUM_REPORT: GhosttyTerminalOption = 44;
+pub const GHOSTTY_TERMINAL_OPT_XT_CHECKSUM_EXTENSION: GhosttyTerminalOption = 45;
+pub const GHOSTTY_TERMINAL_OPT_PROGRAM_STATUS: GhosttyTerminalOption = 46;
+pub const GHOSTTY_TERMINAL_OPT_RESIZE_WINDOW: GhosttyTerminalOption = 47;
 pub const GHOSTTY_TERMINAL_OPT_MAX_VALUE: GhosttyTerminalOption = 2147483647;
 pub type GhosttyTerminalOption = ::std::os::raw::c_int;
 pub const GHOSTTY_TERMINAL_DATA_INVALID: GhosttyTerminalData = 0;
@@ -2135,6 +2555,8 @@ pub const GHOSTTY_TERMINAL_DATA_MODE: GhosttyTerminalData = 37;
 pub const GHOSTTY_TERMINAL_DATA_VT_GROUND: GhosttyTerminalData = 38;
 pub const GHOSTTY_TERMINAL_DATA_CURSOR_AT_PROMPT: GhosttyTerminalData = 39;
 pub const GHOSTTY_TERMINAL_DATA_CLIPBOARD_WRITE_MAX_BYTES: GhosttyTerminalData = 40;
+pub const GHOSTTY_TERMINAL_DATA_MOUSE_SHAPE: GhosttyTerminalData = 41;
+pub const GHOSTTY_TERMINAL_DATA_MEMORY_USAGE: GhosttyTerminalData = 42;
 pub const GHOSTTY_TERMINAL_DATA_MAX_VALUE: GhosttyTerminalData = 2147483647;
 pub type GhosttyTerminalData = ::std::os::raw::c_int;
 unsafe extern "C" {
@@ -2171,11 +2593,12 @@ unsafe extern "C" {
     pub fn ghostty_terminal_vt_write(terminal: GhosttyTerminal, data: *const u8, len: usize);
 }
 unsafe extern "C" {
-    pub fn ghostty_terminal_vt_write_until_ground(
+    pub fn ghostty_terminal_vt_write_until(
         terminal: GhosttyTerminal,
         data: *const u8,
         len: usize,
-        out_consumed: *mut usize,
+        boundaries: u32,
+        out: *mut GhosttyTerminalWriteStop,
     ) -> GhosttyResult;
 }
 unsafe extern "C" {
@@ -2400,6 +2823,36 @@ pub const GHOSTTY_RENDER_STATE_CURSOR_VISUAL_STYLE_BLOCK_HOLLOW:
 pub const GHOSTTY_RENDER_STATE_CURSOR_VISUAL_STYLE_MAX_VALUE: GhosttyRenderStateCursorVisualStyle =
     2147483647;
 pub type GhosttyRenderStateCursorVisualStyle = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyRenderStateOverscan {
+    pub above: u16,
+    pub below: u16,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyRenderStateOverscan"]
+        [::std::mem::size_of::<GhosttyRenderStateOverscan>() - 4usize];
+    ["Alignment of GhosttyRenderStateOverscan"]
+        [::std::mem::align_of::<GhosttyRenderStateOverscan>() - 2usize];
+    ["Offset of field: GhosttyRenderStateOverscan::above"]
+        [::std::mem::offset_of!(GhosttyRenderStateOverscan, above) - 0usize];
+    ["Offset of field: GhosttyRenderStateOverscan::below"]
+        [::std::mem::offset_of!(GhosttyRenderStateOverscan, below) - 2usize];
+};
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GhosttyRenderStateRowId {
+    pub bits: [u64; 2usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of GhosttyRenderStateRowId"][::std::mem::size_of::<GhosttyRenderStateRowId>() - 16usize];
+    ["Alignment of GhosttyRenderStateRowId"]
+        [::std::mem::align_of::<GhosttyRenderStateRowId>() - 8usize];
+    ["Offset of field: GhosttyRenderStateRowId::bits"]
+        [::std::mem::offset_of!(GhosttyRenderStateRowId, bits) - 0usize];
+};
 pub const GHOSTTY_RENDER_STATE_DATA_INVALID: GhosttyRenderStateData = 0;
 pub const GHOSTTY_RENDER_STATE_DATA_COLS: GhosttyRenderStateData = 1;
 pub const GHOSTTY_RENDER_STATE_DATA_ROWS: GhosttyRenderStateData = 2;
@@ -2420,17 +2873,62 @@ pub const GHOSTTY_RENDER_STATE_DATA_CURSOR_VIEWPORT_Y: GhosttyRenderStateData = 
 pub const GHOSTTY_RENDER_STATE_DATA_CURSOR_VIEWPORT_WIDE_TAIL: GhosttyRenderStateData = 17;
 pub const GHOSTTY_RENDER_STATE_DATA_CURSOR: GhosttyRenderStateData = 18;
 pub const GHOSTTY_RENDER_STATE_DATA_COLORS: GhosttyRenderStateData = 19;
+pub const GHOSTTY_RENDER_STATE_DATA_OVERSCAN: GhosttyRenderStateData = 20;
+pub const GHOSTTY_RENDER_STATE_DATA_OVERSCAN_REQUEST: GhosttyRenderStateData = 21;
+pub const GHOSTTY_RENDER_STATE_DATA_IMAGE_ITERATOR: GhosttyRenderStateData = 22;
+pub const GHOSTTY_RENDER_STATE_DATA_IMAGE_PLACEMENTS_GENERATION: GhosttyRenderStateData = 23;
 pub const GHOSTTY_RENDER_STATE_DATA_MAX_VALUE: GhosttyRenderStateData = 2147483647;
 pub type GhosttyRenderStateData = ::std::os::raw::c_int;
 pub const GHOSTTY_RENDER_STATE_OPTION_DIRTY: GhosttyRenderStateOption = 0;
+pub const GHOSTTY_RENDER_STATE_OPTION_OVERSCAN: GhosttyRenderStateOption = 1;
 pub const GHOSTTY_RENDER_STATE_OPTION_MAX_VALUE: GhosttyRenderStateOption = 2147483647;
 pub type GhosttyRenderStateOption = ::std::os::raw::c_int;
+pub const GHOSTTY_IMAGE_PROTOCOL_KITTY: GhosttyImageProtocol = 0;
+pub const GHOSTTY_IMAGE_PROTOCOL_MAX_VALUE: GhosttyImageProtocol = 2147483647;
+pub type GhosttyImageProtocol = ::std::os::raw::c_int;
+pub const GHOSTTY_RENDER_STATE_IMAGE_LAYER_BELOW_BACKGROUND: GhosttyRenderStateImageLayer = 0;
+pub const GHOSTTY_RENDER_STATE_IMAGE_LAYER_BELOW_TEXT: GhosttyRenderStateImageLayer = 1;
+pub const GHOSTTY_RENDER_STATE_IMAGE_LAYER_ABOVE_TEXT: GhosttyRenderStateImageLayer = 2;
+pub const GHOSTTY_RENDER_STATE_IMAGE_LAYER_MAX_VALUE: GhosttyRenderStateImageLayer = 2147483647;
+pub type GhosttyRenderStateImageLayer = ::std::os::raw::c_int;
+pub const GHOSTTY_RENDER_STATE_KITTY_PLACEMENT_KIND_VIRTUAL: GhosttyRenderStateKittyPlacementKind =
+    0;
+pub const GHOSTTY_RENDER_STATE_KITTY_PLACEMENT_KIND_RELATIVE: GhosttyRenderStateKittyPlacementKind =
+    1;
+pub const GHOSTTY_RENDER_STATE_KITTY_PLACEMENT_KIND_FIXED: GhosttyRenderStateKittyPlacementKind = 2;
+pub const GHOSTTY_RENDER_STATE_KITTY_PLACEMENT_KIND_MAX_VALUE:
+    GhosttyRenderStateKittyPlacementKind = 2147483647;
+pub type GhosttyRenderStateKittyPlacementKind = ::std::os::raw::c_int;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_INVALID: GhosttyRenderStateImageData = 0;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_PROTOCOL: GhosttyRenderStateImageData = 1;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_IMAGE_ID: GhosttyRenderStateImageData = 2;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_IMAGE_GENERATION: GhosttyRenderStateImageData = 3;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_LAYER: GhosttyRenderStateImageData = 4;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_Z: GhosttyRenderStateImageData = 5;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_VIEWPORT_COL: GhosttyRenderStateImageData = 6;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_VIEWPORT_ROW: GhosttyRenderStateImageData = 7;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_GRID_COLS: GhosttyRenderStateImageData = 8;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_GRID_ROWS: GhosttyRenderStateImageData = 9;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_CELL_OFFSET_X: GhosttyRenderStateImageData = 10;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_CELL_OFFSET_Y: GhosttyRenderStateImageData = 11;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_PIXEL_WIDTH: GhosttyRenderStateImageData = 12;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_PIXEL_HEIGHT: GhosttyRenderStateImageData = 13;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_SOURCE_X: GhosttyRenderStateImageData = 14;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_SOURCE_Y: GhosttyRenderStateImageData = 15;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_SOURCE_WIDTH: GhosttyRenderStateImageData = 16;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_SOURCE_HEIGHT: GhosttyRenderStateImageData = 17;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_KITTY_PLACEMENT_ID: GhosttyRenderStateImageData = 18;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_KITTY_KIND: GhosttyRenderStateImageData = 19;
+pub const GHOSTTY_RENDER_STATE_IMAGE_DATA_MAX_VALUE: GhosttyRenderStateImageData = 2147483647;
+pub type GhosttyRenderStateImageData = ::std::os::raw::c_int;
 pub const GHOSTTY_RENDER_STATE_ROW_DATA_INVALID: GhosttyRenderStateRowData = 0;
 pub const GHOSTTY_RENDER_STATE_ROW_DATA_DIRTY: GhosttyRenderStateRowData = 1;
 pub const GHOSTTY_RENDER_STATE_ROW_DATA_RAW: GhosttyRenderStateRowData = 2;
 pub const GHOSTTY_RENDER_STATE_ROW_DATA_CELLS: GhosttyRenderStateRowData = 3;
 pub const GHOSTTY_RENDER_STATE_ROW_DATA_SELECTION: GhosttyRenderStateRowData = 4;
 pub const GHOSTTY_RENDER_STATE_ROW_DATA_CELLS_RAW: GhosttyRenderStateRowData = 5;
+pub const GHOSTTY_RENDER_STATE_ROW_DATA_VIEWPORT_Y: GhosttyRenderStateRowData = 6;
+pub const GHOSTTY_RENDER_STATE_ROW_DATA_ID: GhosttyRenderStateRowData = 7;
 pub const GHOSTTY_RENDER_STATE_ROW_DATA_MAX_VALUE: GhosttyRenderStateRowData = 2147483647;
 pub type GhosttyRenderStateRowData = ::std::os::raw::c_int;
 pub const GHOSTTY_RENDER_STATE_ROW_OPTION_DIRTY: GhosttyRenderStateRowOption = 0;
@@ -2662,6 +3160,36 @@ unsafe extern "C" {
     pub fn ghostty_render_state_row_cells_free(cells: GhosttyRenderStateRowCells);
 }
 unsafe extern "C" {
+    pub fn ghostty_render_state_image_iterator_new(
+        allocator: *const GhosttyAllocator,
+        out_iterator: *mut GhosttyRenderStateImageIterator,
+    ) -> GhosttyResult;
+}
+unsafe extern "C" {
+    pub fn ghostty_render_state_image_iterator_free(iterator: GhosttyRenderStateImageIterator);
+}
+unsafe extern "C" {
+    pub fn ghostty_render_state_image_iterator_next(
+        iterator: GhosttyRenderStateImageIterator,
+    ) -> bool;
+}
+unsafe extern "C" {
+    pub fn ghostty_render_state_image_get(
+        iterator: GhosttyRenderStateImageIterator,
+        data: GhosttyRenderStateImageData,
+        out: *mut ::std::os::raw::c_void,
+    ) -> GhosttyResult;
+}
+unsafe extern "C" {
+    pub fn ghostty_render_state_image_get_multi(
+        iterator: GhosttyRenderStateImageIterator,
+        count: usize,
+        keys: *const GhosttyRenderStateImageData,
+        values: *mut *mut ::std::os::raw::c_void,
+        out_written: *mut usize,
+    ) -> GhosttyResult;
+}
+unsafe extern "C" {
     pub fn ghostty_tracked_grid_ref_free(ref_: GhosttyTrackedGridRef);
 }
 unsafe extern "C" {
@@ -2686,67 +3214,6 @@ unsafe extern "C" {
         ref_: GhosttyTrackedGridRef,
         out_ref: *mut GhosttyGridRef,
     ) -> GhosttyResult;
-}
-pub const GHOSTTY_OSC_COMMAND_INVALID: GhosttyOscCommandType = 0;
-pub const GHOSTTY_OSC_COMMAND_CHANGE_WINDOW_TITLE: GhosttyOscCommandType = 1;
-pub const GHOSTTY_OSC_COMMAND_CHANGE_WINDOW_ICON: GhosttyOscCommandType = 2;
-pub const GHOSTTY_OSC_COMMAND_SEMANTIC_PROMPT: GhosttyOscCommandType = 3;
-pub const GHOSTTY_OSC_COMMAND_CLIPBOARD_CONTENTS: GhosttyOscCommandType = 4;
-pub const GHOSTTY_OSC_COMMAND_REPORT_PWD: GhosttyOscCommandType = 5;
-pub const GHOSTTY_OSC_COMMAND_MOUSE_SHAPE: GhosttyOscCommandType = 6;
-pub const GHOSTTY_OSC_COMMAND_COLOR_OPERATION: GhosttyOscCommandType = 7;
-pub const GHOSTTY_OSC_COMMAND_KITTY_COLOR_PROTOCOL: GhosttyOscCommandType = 8;
-pub const GHOSTTY_OSC_COMMAND_SHOW_DESKTOP_NOTIFICATION: GhosttyOscCommandType = 9;
-pub const GHOSTTY_OSC_COMMAND_HYPERLINK_START: GhosttyOscCommandType = 10;
-pub const GHOSTTY_OSC_COMMAND_HYPERLINK_END: GhosttyOscCommandType = 11;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_SLEEP: GhosttyOscCommandType = 12;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_SHOW_MESSAGE_BOX: GhosttyOscCommandType = 13;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_CHANGE_TAB_TITLE: GhosttyOscCommandType = 14;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_PROGRESS_REPORT: GhosttyOscCommandType = 15;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_WAIT_INPUT: GhosttyOscCommandType = 16;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_GUIMACRO: GhosttyOscCommandType = 17;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_RUN_PROCESS: GhosttyOscCommandType = 18;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_OUTPUT_ENVIRONMENT_VARIABLE: GhosttyOscCommandType = 19;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_XTERM_EMULATION: GhosttyOscCommandType = 20;
-pub const GHOSTTY_OSC_COMMAND_CONEMU_COMMENT: GhosttyOscCommandType = 21;
-pub const GHOSTTY_OSC_COMMAND_KITTY_TEXT_SIZING: GhosttyOscCommandType = 22;
-pub const GHOSTTY_OSC_COMMAND_KITTY_CLIPBOARD_PROTOCOL: GhosttyOscCommandType = 23;
-pub const GHOSTTY_OSC_COMMAND_KITTY_DND_PROTOCOL: GhosttyOscCommandType = 24;
-pub const GHOSTTY_OSC_COMMAND_CONTEXT_SIGNAL: GhosttyOscCommandType = 25;
-pub const GHOSTTY_OSC_COMMAND_KITTY_DESKTOP_NOTIFICATION: GhosttyOscCommandType = 26;
-pub const GHOSTTY_OSC_COMMAND_TYPE_MAX_VALUE: GhosttyOscCommandType = 2147483647;
-pub type GhosttyOscCommandType = ::std::os::raw::c_int;
-pub const GHOSTTY_OSC_DATA_INVALID: GhosttyOscCommandData = 0;
-pub const GHOSTTY_OSC_DATA_CHANGE_WINDOW_TITLE_STR: GhosttyOscCommandData = 1;
-pub const GHOSTTY_OSC_DATA_MAX_VALUE: GhosttyOscCommandData = 2147483647;
-pub type GhosttyOscCommandData = ::std::os::raw::c_int;
-unsafe extern "C" {
-    pub fn ghostty_osc_new(
-        allocator: *const GhosttyAllocator,
-        parser: *mut GhosttyOscParser,
-    ) -> GhosttyResult;
-}
-unsafe extern "C" {
-    pub fn ghostty_osc_free(parser: GhosttyOscParser);
-}
-unsafe extern "C" {
-    pub fn ghostty_osc_reset(parser: GhosttyOscParser);
-}
-unsafe extern "C" {
-    pub fn ghostty_osc_next(parser: GhosttyOscParser, byte: u8);
-}
-unsafe extern "C" {
-    pub fn ghostty_osc_end(parser: GhosttyOscParser, terminator: u8) -> GhosttyOscCommand;
-}
-unsafe extern "C" {
-    pub fn ghostty_osc_command_type(command: GhosttyOscCommand) -> GhosttyOscCommandType;
-}
-unsafe extern "C" {
-    pub fn ghostty_osc_command_data(
-        command: GhosttyOscCommand,
-        data: GhosttyOscCommandData,
-        out: *mut ::std::os::raw::c_void,
-    ) -> bool;
 }
 pub const GHOSTTY_SGR_ATTR_UNSET: GhosttySgrAttributeTag = 0;
 pub const GHOSTTY_SGR_ATTR_UNKNOWN: GhosttySgrAttributeTag = 1;
@@ -3465,6 +3932,42 @@ unsafe extern "C" {
         out_len: *mut usize,
     ) -> GhosttyResult;
 }
+pub const GHOSTTY_MOUSE_SHAPE_DEFAULT: GhosttyMouseShape = 0;
+pub const GHOSTTY_MOUSE_SHAPE_CONTEXT_MENU: GhosttyMouseShape = 1;
+pub const GHOSTTY_MOUSE_SHAPE_HELP: GhosttyMouseShape = 2;
+pub const GHOSTTY_MOUSE_SHAPE_POINTER: GhosttyMouseShape = 3;
+pub const GHOSTTY_MOUSE_SHAPE_PROGRESS: GhosttyMouseShape = 4;
+pub const GHOSTTY_MOUSE_SHAPE_WAIT: GhosttyMouseShape = 5;
+pub const GHOSTTY_MOUSE_SHAPE_CELL: GhosttyMouseShape = 6;
+pub const GHOSTTY_MOUSE_SHAPE_CROSSHAIR: GhosttyMouseShape = 7;
+pub const GHOSTTY_MOUSE_SHAPE_TEXT: GhosttyMouseShape = 8;
+pub const GHOSTTY_MOUSE_SHAPE_VERTICAL_TEXT: GhosttyMouseShape = 9;
+pub const GHOSTTY_MOUSE_SHAPE_ALIAS: GhosttyMouseShape = 10;
+pub const GHOSTTY_MOUSE_SHAPE_COPY: GhosttyMouseShape = 11;
+pub const GHOSTTY_MOUSE_SHAPE_MOVE: GhosttyMouseShape = 12;
+pub const GHOSTTY_MOUSE_SHAPE_NO_DROP: GhosttyMouseShape = 13;
+pub const GHOSTTY_MOUSE_SHAPE_NOT_ALLOWED: GhosttyMouseShape = 14;
+pub const GHOSTTY_MOUSE_SHAPE_GRAB: GhosttyMouseShape = 15;
+pub const GHOSTTY_MOUSE_SHAPE_GRABBING: GhosttyMouseShape = 16;
+pub const GHOSTTY_MOUSE_SHAPE_ALL_SCROLL: GhosttyMouseShape = 17;
+pub const GHOSTTY_MOUSE_SHAPE_COL_RESIZE: GhosttyMouseShape = 18;
+pub const GHOSTTY_MOUSE_SHAPE_ROW_RESIZE: GhosttyMouseShape = 19;
+pub const GHOSTTY_MOUSE_SHAPE_N_RESIZE: GhosttyMouseShape = 20;
+pub const GHOSTTY_MOUSE_SHAPE_E_RESIZE: GhosttyMouseShape = 21;
+pub const GHOSTTY_MOUSE_SHAPE_S_RESIZE: GhosttyMouseShape = 22;
+pub const GHOSTTY_MOUSE_SHAPE_W_RESIZE: GhosttyMouseShape = 23;
+pub const GHOSTTY_MOUSE_SHAPE_NE_RESIZE: GhosttyMouseShape = 24;
+pub const GHOSTTY_MOUSE_SHAPE_NW_RESIZE: GhosttyMouseShape = 25;
+pub const GHOSTTY_MOUSE_SHAPE_SE_RESIZE: GhosttyMouseShape = 26;
+pub const GHOSTTY_MOUSE_SHAPE_SW_RESIZE: GhosttyMouseShape = 27;
+pub const GHOSTTY_MOUSE_SHAPE_EW_RESIZE: GhosttyMouseShape = 28;
+pub const GHOSTTY_MOUSE_SHAPE_NS_RESIZE: GhosttyMouseShape = 29;
+pub const GHOSTTY_MOUSE_SHAPE_NESW_RESIZE: GhosttyMouseShape = 30;
+pub const GHOSTTY_MOUSE_SHAPE_NWSE_RESIZE: GhosttyMouseShape = 31;
+pub const GHOSTTY_MOUSE_SHAPE_ZOOM_IN: GhosttyMouseShape = 32;
+pub const GHOSTTY_MOUSE_SHAPE_ZOOM_OUT: GhosttyMouseShape = 33;
+pub const GHOSTTY_MOUSE_SHAPE_MAX_VALUE: GhosttyMouseShape = 2147483647;
+pub type GhosttyMouseShape = ::std::os::raw::c_int;
 pub const GHOSTTY_PASTE_SOURCE_CLIPBOARD: GhosttyPasteSource = 0;
 pub const GHOSTTY_PASTE_SOURCE_TEXT: GhosttyPasteSource = 1;
 pub const GHOSTTY_PASTE_SOURCE_MAX_VALUE: GhosttyPasteSource = 2147483647;
@@ -3589,8 +4092,15 @@ unsafe extern "C" {
 }
 pub const GHOSTTY_SNAPSHOT_DECODER_OPT_MAX_CONTINUATION_BYTES: GhosttySnapshotDecoderOption = 0;
 pub const GHOSTTY_SNAPSHOT_DECODER_OPT_RETAIN_CONTINUATION: GhosttySnapshotDecoderOption = 1;
+pub const GHOSTTY_SNAPSHOT_DECODER_OPT_COMPRESS_HISTORY: GhosttySnapshotDecoderOption = 2;
+pub const GHOSTTY_SNAPSHOT_DECODER_OPT_KITTY_IMAGE_STORAGE_LIMIT: GhosttySnapshotDecoderOption = 3;
 pub const GHOSTTY_SNAPSHOT_DECODER_OPT_MAX_VALUE: GhosttySnapshotDecoderOption = 2147483647;
 pub type GhosttySnapshotDecoderOption = ::std::os::raw::c_int;
+pub const GHOSTTY_SNAPSHOT_DECODER_PROGRESS_KIND_PAGE: GhosttySnapshotDecoderProgressKind = 0;
+pub const GHOSTTY_SNAPSHOT_DECODER_PROGRESS_KIND_IMAGE: GhosttySnapshotDecoderProgressKind = 1;
+pub const GHOSTTY_SNAPSHOT_DECODER_PROGRESS_KIND_MAX_VALUE: GhosttySnapshotDecoderProgressKind =
+    2147483647;
+pub type GhosttySnapshotDecoderProgressKind = ::std::os::raw::c_int;
 pub const GHOSTTY_SNAPSHOT_DECODER_DATA_INVALID: GhosttySnapshotDecoderData = 0;
 pub const GHOSTTY_SNAPSHOT_DECODER_DATA_MAX_CONTINUATION_BYTES: GhosttySnapshotDecoderData = 1;
 pub const GHOSTTY_SNAPSHOT_DECODER_DATA_SOURCE_OFFSET: GhosttySnapshotDecoderData = 2;
@@ -3600,6 +4110,18 @@ pub const GHOSTTY_SNAPSHOT_DECODER_DATA_PROGRESS_SCREEN: GhosttySnapshotDecoderD
 pub const GHOSTTY_SNAPSHOT_DECODER_DATA_PROGRESS_ROWS: GhosttySnapshotDecoderData = 6;
 pub const GHOSTTY_SNAPSHOT_DECODER_DATA_PROGRESS_REMAINING: GhosttySnapshotDecoderData = 7;
 pub const GHOSTTY_SNAPSHOT_DECODER_DATA_RETAIN_CONTINUATION: GhosttySnapshotDecoderData = 8;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_COMPRESS_HISTORY: GhosttySnapshotDecoderData = 9;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_KITTY_IMAGE_STORAGE_LIMIT: GhosttySnapshotDecoderData = 10;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_PROGRESS_KIND: GhosttySnapshotDecoderData = 11;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_PROGRESS_IMAGE_ID: GhosttySnapshotDecoderData = 12;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_PROGRESS_IMAGE_FRAME: GhosttySnapshotDecoderData = 13;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_PROGRESS_IMAGE_BYTES: GhosttySnapshotDecoderData = 14;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_KITTY_IMAGES_PRIMARY: GhosttySnapshotDecoderData = 15;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_KITTY_IMAGES_ALTERNATE: GhosttySnapshotDecoderData = 16;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_KITTY_PENDING_BYTES_PRIMARY: GhosttySnapshotDecoderData =
+    17;
+pub const GHOSTTY_SNAPSHOT_DECODER_DATA_KITTY_PENDING_BYTES_ALTERNATE: GhosttySnapshotDecoderData =
+    18;
 pub const GHOSTTY_SNAPSHOT_DECODER_DATA_MAX_VALUE: GhosttySnapshotDecoderData = 2147483647;
 pub type GhosttySnapshotDecoderData = ::std::os::raw::c_int;
 unsafe extern "C" {
