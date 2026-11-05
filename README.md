@@ -18,9 +18,11 @@ The upstream C API is still evolving, and updating the pinned Ghostty revision c
 break Rust callers. Pin an exact crate commit and review updates before adopting
 them. The package version alone does not identify the upstream ABI.
 
-CI validates native builds on **macOS and Linux**. Other platforms are not
-currently tested. A cross build passes Cargo's target to Zig, as
-`<arch>-<os>[-<abi>]` from Cargo's `target_arch`, `target_os` and `target_env`;
+CI validates native builds on **macOS and Linux**. Native `x86_64-pc-windows-msvc`
+builds link the static library and have been run by hand, not in CI. Other
+platforms are not currently tested. A cross build or an MSVC build passes Cargo's
+target to Zig, as `<arch>-<os>[-<abi>]` from Cargo's `target_arch`, `target_os` and
+`target_env`;
 `GHOSTTY_VT_ZIG_TARGET` names the Zig target exactly instead, such as
 `x86_64-linux-gnu.2.28` to require no newer glibc. Cross builds are not tested
 in CI.

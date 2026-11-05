@@ -23,9 +23,19 @@ fn main() {
         "cargo:rustc-link-search=native={}",
         install_prefix.join("lib").display()
     );
-    println!("cargo:rustc-link-lib=static=ghostty-vt");
+    println!("cargo:rustc-link-lib=static={}", static_library());
     println!("cargo:rerun-if-env-changed=ZIG");
     println!("cargo:rerun-if-changed={}", ghostty_source.display());
+}
+
+/// The static library's name: on Windows `ghostty-vt` is the DLL's import
+/// library, which would leave the program needing `ghostty-vt.dll` at run time.
+fn static_library() -> &'static str {
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
+        "ghostty-vt-static"
+    } else {
+        "ghostty-vt"
+    }
 }
 
 fn build_libghostty_vt(source: &Path, install_prefix: &Path) {
@@ -62,8 +72,8 @@ fn build_libghostty_vt(source: &Path, install_prefix: &Path) {
 
 /// The target Zig builds for: `GHOSTTY_VT_ZIG_TARGET` when set, which names
 /// it exactly (such as `x86_64-linux-gnu.2.28` for an older glibc); else
-/// Cargo's target when it is not the machine building; else none, and Zig
-/// builds for this machine.
+/// Cargo's target when it is not the machine building or when it is MSVC, whose
+/// ABI Zig does not choose by default; else none, and Zig builds for this machine.
 fn zig_target() -> Option<String> {
     println!("cargo:rerun-if-env-changed=GHOSTTY_VT_ZIG_TARGET");
     if let Some(target) = env::var_os("GHOSTTY_VT_ZIG_TARGET") {
@@ -74,12 +84,12 @@ fn zig_target() -> Option<String> {
         );
     }
     let cargo = |name: &str| env::var(name).unwrap_or_else(|_| panic!("Cargo must provide {name}"));
-    if cargo("HOST") == cargo("TARGET") {
+    let abi = cargo("CARGO_CFG_TARGET_ENV");
+    if cargo("HOST") == cargo("TARGET") && abi != "msvc" {
         return None;
     }
     let architecture = cargo("CARGO_CFG_TARGET_ARCH");
     let os = cargo("CARGO_CFG_TARGET_OS");
-    let abi = cargo("CARGO_CFG_TARGET_ENV");
     Some(if abi.is_empty() {
         format!("{architecture}-{os}")
     } else {
